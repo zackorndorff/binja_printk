@@ -69,7 +69,7 @@ Note the ugly printk invocation! We can do better!
 
 ## Code formatting
 
-`clang-format -style=Google main.cpp -`
+`clang-format -style=Google main.cpp -i`
 
 ## License
 
