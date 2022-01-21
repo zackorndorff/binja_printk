@@ -7,6 +7,10 @@ if(NOT BNAPI_DIR)
 		CACHE PATH "binaryninja-api root dir")
 endif()
 
+if(NOT CMAKE_OSX_ARCHITECTURES)
+	set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE INTERNAL "")
+endif()
+
 file(GLOB SOURCES
 	*.cpp
 	*.h)
