@@ -51,7 +51,9 @@ Note the ugly printk invocation! We can do better!
 
 ## Usage
 1. Build it, per the instructions above. Given Binary Ninja's development pace,
-   providing precompiled binaries isn't all that practical.
+   providing precompiled binaries isn't all that practical. I'm experimenting
+   with GitHub Actions, if that pans out you can find builds in the build
+   artifacts :)
 2. Open With Options your `.ko`.
 3. Scroll to the bottom section "Workflows". Enable them with the "Workflows
    Analysis Orchestration Framework" checkbox, then set "Function Workflow" to

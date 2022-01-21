@@ -7,16 +7,28 @@ if(NOT BNAPI_DIR)
 		CACHE PATH "binaryninja-api root dir")
 endif()
 
+# Build fat Mach-O for macOS
 if(NOT CMAKE_OSX_ARCHITECTURES)
-	set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE INTERNAL "")
+	set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64")
 endif()
 
-set(HEADLESS ON)
-if(UNIX)
-	if(APPLE)
-		set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-undefined,dynamic_lookup")
-	else()
-		set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--unresolved-symbols=ignore-in-object-files")
+# Set headless to avoid trying to link against the UI library
+set(HEADLESS ON CACHE BOOL "")
+# We don't have libbinaryninjacore in CI, as it's part of the paid product.
+# We have the headers, so tell the linker everything's ok.
+# At the moment this requires a patch to binaryninja-api's CMakeLists.txt to
+# stop trying to find_library the core. In CI, I use a sed command to patch it
+# :/
+if(CIBUILD)
+	if(UNIX)
+		if(APPLE)
+			set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-undefined,dynamic_lookup")
+		else()
+			set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--unresolved-symbols=ignore-in-object-files")
+		endif()
+	endif()
+	if(MSVC)
+		set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /FORCE:UNRESOLVED")
 	endif()
 endif()
 

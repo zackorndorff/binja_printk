@@ -1,33 +1,40 @@
-name: GitHub Actions Demo
+name: Cross-Platform Build
 on:
   push:
-    branches: [ master, actions-test ]
+    branches: [ master ]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
 
 jobs:
-  Explore-GitHub-Actions:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      - name: Check out repository code
-        uses: actions/checkout@v2
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
-        run: |
-          ls ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
-
   build:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            extension: .so
+            libprefix: "lib"
+            sed_path: "sed"
+            sed_inplace: "-i"
+
+          - os: macos-latest
+            extension: .dylib
+            libprefix: "lib"
+            sed_path: "sed"
+            sed_inplace: "-i.bak"
+
+          - os: windows-latest
+            extension: .dll
+            libprefix: "Release/"
+            sed_path: '& "C:\Program Files\Git\usr\bin\sed.exe"'
+            sed_inplace: "-i"
+
 
     steps:
     - uses: actions/checkout@v2
@@ -36,19 +43,19 @@ jobs:
 
     - name: Patch Binary Ninja API to not require core binaries
       run: |-
-        sed -i '' '/^# We only need/,/^endif/{d;};/target_link_libraries.*BN_CORE_LIBRARY/{d;};/target_link_directories.*BN_INSTALL_BIN_DIR/{d;};' CMakeLists.txt
+        ${{matrix.sed_path}} -E ${{matrix.sed_inplace}} '/^# We only need/,/^endif/{d;};/target_link_libraries.*BN_CORE_LIBRARY/{d;};/target_link_directories.*BN_INSTALL_BIN_DIR/{d;};' ${{github.workspace}}/vendor/api/CMakeLists.txt
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCIBUILD=ON
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
         name: built-${{runner.os}}
-        path: ${{github.workspace}}/build/libbinja_printk.so
+        path: ${{github.workspace}}/build/${{matrix.libprefix}}binja_printk${{matrix.extension}}
