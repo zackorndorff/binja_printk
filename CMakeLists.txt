@@ -11,6 +11,15 @@ if(NOT CMAKE_OSX_ARCHITECTURES)
 	set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE INTERNAL "")
 endif()
 
+set(HEADLESS ON)
+if(UNIX)
+	if(APPLE)
+		set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-undefined,dynamic_lookup")
+	else()
+		set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--unresolved-symbols=ignore-in-object-files")
+	endif()
+endif()
+
 file(GLOB SOURCES
 	*.cpp
 	*.h)
