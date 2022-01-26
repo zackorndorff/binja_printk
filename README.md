@@ -55,6 +55,8 @@ Note the ugly printk invocation! We can do better!
 
    If you trust my binaries, you can use the precompiled binaries found
    [on the release page](https://github.com/zackorndorff/binja_printk/releases).
+   Note that the builds tracking stable will not work on 2.4, you'll either need
+   to have 2.5 (which I think is Enterprise only?) or the upcoming 3.0.
 
    If you're on an Apple platform with Gatekeeper enabled, you'll need to remove
    the quarantine attribute on the dylib:
@@ -73,6 +75,18 @@ Note the ugly printk invocation! We can do better!
 * A C++ compiler CMake can find
 * Binary Ninja Commercial (it's required for Workflows at the moment)
     * Last tested against v3.0.3212-dev
+
+## Updating the binaryninja-api commits used for automated builds
+
+Just update the submodule, it should be rebuilt automatically. The autobuild
+will create a prerelease release. On tag, a draft release will be created that
+can be manually approved.
+
+So when a new Binary Ninja stable is released, the `vendor/api-stable` submodule
+should be updated to point to whatever is current at that point.
+
+When the dev ABI breaks and we get complaints when we try to load the plugin, we
+should bump `vendor/api` to latest dev. Or whenever we need a new feature.
 
 ## Code formatting
 
