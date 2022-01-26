@@ -194,6 +194,7 @@ def main():
                     "arm64",
                     "-arch",
                     "x86_64",
+                    f"-Wl,-install_name,{os.path.basename(args.outfile)}",
                     tmpfilename,
                     "-o",
                     args.outfile,
