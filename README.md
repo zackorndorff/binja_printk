@@ -50,10 +50,15 @@ Note the ugly printk invocation! We can do better!
    directory.
 
 ## Usage
-1. Build it, per the instructions above. Given Binary Ninja's development pace,
-   providing precompiled binaries isn't all that practical. I'm experimenting
-   with GitHub Actions, if that pans out you can find builds in the build
-   artifacts :)
+1. Install it to your plugin directory. You just drop the binary there; you can
+   click Tools > Open Plugin Folder in Binary Ninja to open it.
+
+   If you trust my binaries, you can use the precompiled binaries found
+   [on the release page](https://github.com/zackorndorff/binja_printk/releases).
+
+   If you're on an Apple platform with Gatekeeper enabled, you'll need to remove
+   the quarantine attribute on the dylib:
+   `xattr -d com.apple.quarantine libbinja_printk.dylib`
 2. Open With Options your `.ko`.
 3. Scroll to the bottom section "Workflows". Enable them with the "Workflows
    Analysis Orchestration Framework" checkbox, then set "Function Workflow" to
@@ -67,7 +72,7 @@ Note the ugly printk invocation! We can do better!
     * I don't know CMake, so excuse my poorly written build system please.
 * A C++ compiler CMake can find
 * Binary Ninja Commercial (it's required for Workflows at the moment)
-    * Last tested against v2.5.3183-dev
+    * Last tested against v3.0.3212-dev
 
 ## Code formatting
 

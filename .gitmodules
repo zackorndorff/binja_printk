@@ -1,3 +1,7 @@
 [submodule "vendor/api"]
 	path = vendor/api
 	url = https://github.com/Vector35/binaryninja-api
+[submodule "vendor/api-stable"]
+	path = vendor/api-stable
+	url = https://github.com/Vector35/binaryninja-api
+	branch = master

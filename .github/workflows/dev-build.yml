@@ -1,0 +1,53 @@
+name: Dev Build
+on:
+  push:
+    branches: [ master, actions-test ]
+
+jobs:
+  build-dev:
+    uses: ./.github/workflows/cross-platform-build.yml
+    name: Build against Binary Ninja Dev
+    with:
+      # Should match project(name_here) from CMakeLists.txt
+      project_name: binja_printk
+      artifact_prefix: dev
+      binaryninja_api_path: vendor/api
+
+  build-stable:
+    uses: ./.github/workflows/cross-platform-build.yml
+    name: Build against Binary Ninja Stable
+    with:
+      # Should match project(name_here) from CMakeLists.txt
+      project_name: binja_printk
+      artifact_prefix: stable
+      binaryninja_api_path: vendor/api-stable
+
+  make-release:
+    needs: [ build-dev, build-stable ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: artifacts
+      - name: Check files present
+        run: |-
+          cd artifacts
+          ls -Fhl
+          find .
+      - name: Rename files for release
+        run: |-
+          cd artifacts
+          ${{github.workspace}}/scripts/tidy-release.bash dev stable
+      - name: Release
+        uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          draft: false
+          prerelease: true
+          automatic_release_tag: "automated-build"
+          title: "Automated Build"
+          files: |-
+            artifacts/release/*
