@@ -41,6 +41,12 @@ if(FAKE_BN_CORE)
 			# If SONAME changes, this will need a change
 			set(BN_CORE_NAME "libbinaryninjacore.so.1")
 			set(GEN_PLATFORM "linux")
+
+			# don't hardcode builder paths...
+			set(CMAKE_SKIP_BUILD_RPATH TRUE)
+			set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+			set(CMAKE_INSTALL_RPATH "")
+			set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
 		endif()
 	endif()
 	if(MSVC)
