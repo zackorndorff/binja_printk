@@ -202,7 +202,7 @@ def main():
             )
         elif platform == "linux":
             subprocess.run(
-                ["cc", tmpfilename, "-fPIC", "-shared", "-o", args.outfile],
+                ["cc", tmpfilename, "-fPIC", "-shared", f"-Wl,-soname,{args.outfile}", "-o", args.outfile],
                 check=True,
             )
         else:
