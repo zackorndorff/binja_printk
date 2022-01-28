@@ -27,6 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Download all artifacts
         uses: actions/download-artifact@v2
@@ -41,9 +43,13 @@ jobs:
         run: |-
           cd artifacts
           ${{github.workspace}}/scripts/tidy-release.bash dev stable
+      - name: Make a Git tag
+        run: |-
+          git tag -f automated-build
+          git push --tags -f
       - name: Release
         env:
-          GITHUB_TOKEN: "{{ secrets.GITHUB_TOKEN }}"
-        working-directory: "${{github.workspace}}"
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        working-directory: "${{github.workspace}}/artifacts"
         run: |-
-          ${{github.workspace}}/scripts/do-release.bash "Automated Build $(git describe --tags)" automated-build artifacts/release/ true false
+          ${{github.workspace}}/scripts/do-release.py --title "Automated Build" --tag "automated-build" --artifacts release --prerelease

@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
 project(binja_printk)
 
+# This can be overridden by the user if desired
+# We also override it to swap between building for dev and stable in CI
 if(NOT BNAPI_DIR)
 	set(BNAPI_DIR "vendor/api"
 		CACHE PATH "binaryninja-api root dir")
@@ -61,7 +63,9 @@ if(FAKE_BN_CORE)
 	# Gives us the Python3_EXECUTABLE variable
 	find_package(Python3 COMPONENTS Interpreter)
 
-	# I hacked together something like this until it worked
+	# I wanted the "build libbinaryninjacore" step to be part of the CMake
+	# dependency graph, so I hacked together something like this until it
+	# worked
 	# https://stackoverflow.com/a/60073596
 	# PRs welcome to tidy this up
 	add_custom_command(

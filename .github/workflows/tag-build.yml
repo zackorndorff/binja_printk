@@ -28,6 +28,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Download all artifacts
         uses: actions/download-artifact@v2
@@ -45,7 +47,7 @@ jobs:
           find .
       - name: Release
         env:
-          GITHUB_TOKEN: "{{ secrets.GITHUB_TOKEN }}"
-        working-directory: "${{github.workspace}}"
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        working-directory: "${{github.workspace}}/artifacts"
         run: |-
-          ${{github.workspace}}/scripts/do-release.bash "Release $(git describe --tags)" automated-build artifacts/release/ false true
+          ${{github.workspace}}/scripts/do-release.py --title "Release" --tag $GITHUB_REF_NAME --artifacts release --draft
