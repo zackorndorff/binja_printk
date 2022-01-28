@@ -42,12 +42,7 @@ jobs:
           cd artifacts
           ${{github.workspace}}/scripts/tidy-release.bash dev stable
       - name: Release
-        uses: marvinpinto/action-automatic-releases@latest
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          draft: false
-          prerelease: true
-          automatic_release_tag: "automated-build"
-          title: "Automated Build"
-          files: |-
-            artifacts/release/*
+        env:
+          GITHUB_TOKEN: {{ secrets.GITHUB_TOKEN }}
+        run: |-
+          ${{github.workspace}}/scripts/do-release.bash "Automated Build" automated-build artifacts/release/ true true
