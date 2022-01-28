@@ -1,3 +1,5 @@
+# This file handles actually building the plugin and publishing artifacts.
+# It does not create a GitHub release; that's done by the caller.
 name: Cross-Platform Build
 
 on:
@@ -6,15 +8,23 @@ on:
       project_name:
         required: true
         type: string
+        description: What should we call your library?
       binaryninja_api_path:
         required: false
         default: "vendor/api"
         type: string
+        description: location of binaryninja-api checkout
       artifact_prefix:
         required: false
         default: "built"
         type: string
+        description: >-
+          prefix to apply to uploaded artifacts, to disambiguate from other test
+          runs
 
+# Note if you build Debug, you'll be using the debug C runtime on Windows and
+# will likely crash on load due to incompatibility with Binary Ninja using the
+# normal, release C runtime.
 env:
   BUILD_TYPE: Release
 
@@ -28,27 +38,21 @@ jobs:
         include:
           - os: ubuntu-latest
             cmake_backend: "Unix Makefiles"
-            python: "python3"
-            fakelib_name: libbinaryninjacore.so
+            # We use this "glob" to find the built binary and upload it. Right
+            # now it's just a plain path, but doesn't have to be.
+            # Additionally for Windows we have a separate step hardcoded below
+            # to upload the PDB, that seemed cleanest.
             binary_glob: "lib${{ inputs.project_name }}.so"
-            sed_path: "sed"
-            sed_inplace: "-i"
 
           - os: macos-latest
             cmake_backend: "Unix Makefiles"
-            python: "python3"
-            fakelib_name: libbinaryninjacore.dylib
             binary_glob: "lib${{ inputs.project_name }}.dylib"
-            sed_path: "sed"
-            sed_inplace: "-i.bak"
 
           - os: windows-latest
+            # I couldn't find a way to multithread a msbuild build, so I
+            # switched to Ninja.
             cmake_backend: "Ninja"
-            python: "py -3"
-            fakelib_name: binaryninjacore.lib
             binary_glob: "${{ inputs.project_name }}.dll"
-            #sed_path: '& "C:\Program Files\Git\usr\bin\sed.exe"'
-            #sed_inplace: "-i"
 
 
     steps:
@@ -63,6 +67,8 @@ jobs:
       with:
         arch: x64
 
+    # The only thing about the CI build that's weird here is that we've enabled
+    # the FAKE_BN_CORE option.
     - name: Configure CMake
       run: cmake -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBNAPI_DIR=${{ inputs.binaryninja_api_path }} -DFAKE_BN_CORE=ON -S ${{github.workspace}} -B ${{github.workspace}}/build "-G${{ matrix.cmake_backend }}"
 

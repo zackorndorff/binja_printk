@@ -1,6 +1,17 @@
 """
-Hack to generate a binaryninjacore.lib from the binaryninjacore.h header file
-This makes up for the fact that we don't actually have the .lib or .dll in CI.
+Hack to generate a linkable library from the binaryninjacore.h header file
+This makes up for the fact that we don't actually have it in CI.
+
+We do this by parsing the header with the fantastic regex you see below. Then it
+varies by platform.
+
+On Windows we build a .def file that lists all found symbols as exports, then we
+use Microsoft's lib.exe to make a .lib file we can link against.
+
+On Mac and Linux, we build a .S assembly file that defines all found symbols
+with just a ret after them, then we build that into a shared object or dynamic
+library. On Mac we even build for x86_64 and M1 (turns out "ret" exists
+everywhere :) )
 """
 
 import argparse
@@ -157,9 +168,12 @@ def main():
     args = parser.parse_args()
     platform = args.platform.lower()
 
+    # Parse binaryninjacore.h
     with open(args.header, "r") as fp:
         header_str = fp.read()
     functions = parse_header(header_str)
+
+    # Generate source file contents to work with
     if platform == "windows":
         out_str = generate_def(functions, "binaryninjacore.dll")
         suffix = ".def"
@@ -172,6 +186,7 @@ def main():
     else:
         raise Exception(f"Unknown platform {args.platform}")
 
+    # Now turn that source file into a linkable library
     hTmpfile, tmpfilename = tempfile.mkstemp(suffix=suffix)
     tempf = os.fdopen(hTmpfile, "w")
     try:

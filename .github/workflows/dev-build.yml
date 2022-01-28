@@ -1,3 +1,10 @@
+# This file handles building every push to master (or my super secret test
+# branch)
+# We overwrite the same GitHub release with new binaries every time. Maybe
+# suboptimal but it works.
+#
+# You should tag an actual release when you're ready (see tag-build.yml for how
+# it'll get built :) )
 name: Dev Build
 on:
   push:
@@ -28,6 +35,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
+          # We checkout the whole repo so that git describe works. There's
+          # probably a more performant way, but most plugins are small so this
+          # should be fine.
           fetch-depth: 0
 
       - name: Download all artifacts
@@ -39,10 +49,10 @@ jobs:
           cd artifacts
           ls -Fhl
           find .
-      - name: Rename files for release
+      - name: Consolidate and rename files for release
         run: |-
           cd artifacts
-          ${{github.workspace}}/scripts/tidy-release.bash dev stable
+          ${{github.workspace}}/scripts/tidy_release.bash dev stable
       - name: Make a Git tag
         run: |-
           git tag -f automated-build
@@ -52,4 +62,4 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         working-directory: "${{github.workspace}}/artifacts"
         run: |-
-          ${{github.workspace}}/scripts/do-release.py --title "Automated Build" --tag "automated-build" --artifacts release --prerelease
+          ${{github.workspace}}/scripts/do_release.py --title "Automated Build" --tag "automated-build" --artifacts release --prerelease --overwrite
