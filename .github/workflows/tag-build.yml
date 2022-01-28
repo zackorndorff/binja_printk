@@ -46,5 +46,6 @@ jobs:
       - name: Release
         env:
           GITHUB_TOKEN: "{{ secrets.GITHUB_TOKEN }}"
+        working-directory: "${{github.workspace}}"
         run: |-
           ${{github.workspace}}/scripts/do-release.bash "Release $(git describe --tags)" automated-build artifacts/release/ false true
