@@ -55,8 +55,6 @@ Note the ugly printk invocation! We can do better!
 
    If you trust my binaries, you can use the precompiled binaries found
    [on the release page](https://github.com/zackorndorff/binja_printk/releases).
-   Note that the builds tracking stable will not work on 2.4, you'll either need
-   to have 2.5 (which I think is Enterprise only?) or the upcoming 3.0.
 
    If you're on an Apple platform with Gatekeeper enabled, you'll need to remove
    the quarantine attribute on the dylib:
