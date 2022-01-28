@@ -44,11 +44,7 @@ jobs:
           ${{github.workspace}}/scripts/tidy-release.bash dev stable
           find .
       - name: Release
-        uses: marvinpinto/action-automatic-releases@latest
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          draft: true
-          prerelease: false
-          title: "Release Build"
-          files: |-
-            artifacts/release/*
+        env:
+          GITHUB_TOKEN: "{{ secrets.GITHUB_TOKEN }}"
+        run: |-
+          ${{github.workspace}}/scripts/do-release.bash "Release $(git describe --tags)" automated-build artifacts/release/ false true

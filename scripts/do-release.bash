@@ -18,10 +18,6 @@ draft="$5"
 
 message="$title\nAutomated build."
 
-hub(){
-    echo "$*"
-}
-
 hub release create -t "$GITHUB_SHA" -m "$message" -d --prerelease="$prerelease" "$tag_name"
 for file in "$release_dir/*"
 do

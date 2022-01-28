@@ -45,4 +45,4 @@ jobs:
         env:
           GITHUB_TOKEN: "{{ secrets.GITHUB_TOKEN }}"
         run: |-
-          ${{github.workspace}}/scripts/do-release.bash "Automated Build" automated-build artifacts/release/ true true
+          ${{github.workspace}}/scripts/do-release.bash "Automated Build $(git describe --tags)" automated-build artifacts/release/ true false
