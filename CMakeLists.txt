@@ -84,6 +84,10 @@ if(FAKE_BN_CORE)
   # Tell the API repo about it... I thought this had to be a filename but
   # apparently not
   set(CORE_LIBRARY FAKEBNCORE)
+
+  # The BN devs renamed this variable since the last stable. Above is the new
+  # name; keep this variable alive until the next stable
+  set(BN_CORE_LIBRARY CORE_LIBRARY)
 endif()
 
 # Here we actually build our plugin
