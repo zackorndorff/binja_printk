@@ -60,6 +60,7 @@ jobs:
       - name: Release
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          HUB_VERBOSE: 1
         working-directory: "${{github.workspace}}/artifacts"
         run: |-
           ${{github.workspace}}/scripts/do_release.py --title "Automated Build" --tag "automated-build" --artifacts release --prerelease --overwrite

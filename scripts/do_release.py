@@ -9,9 +9,9 @@ import subprocess
 
 def hub(*args, check=True):
     args = ["hub"] + list(args)
-    print("Running command", args)
+    print("Running command", args, flush=True)
     result = subprocess.run(args, check=check)
-    print("Command returned", result.returncode)
+    print("Command returned", result.returncode, flush=True)
     return result
 
 
