@@ -23,7 +23,7 @@ import tempfile
 from typing import List
 
 COREFUNC_RE = re.compile(
-    r"^\W*BINARYNINJACOREAPI\W+[A-Za-z0-9_ ]+\W+([A-Za-z0-9_]+)\([^;]*\);\W*$",
+    r"^\W*BINARYNINJACOREAPI\W+[A-Za-z0-9_ ]+\W+([A-Za-z0-9_]+)\([^;]*\);",
     re.MULTILINE,
 )
 
@@ -53,14 +53,17 @@ def test_parse_header():
         asdf);
         BINARYNINJACOREAPI int64_t BNWriteDatabaseSnapshotData(BNDatabase* database, int64_t* parents, size_t parentCount, BNBinaryView* file, const char* name, BNKeyValueStore* data, bool autoSave, void* ctxt, bool(*progress)(void*, size_t, size_t));
         BINARYNINJACOREAPI const char** BNSettingsGetStringList(BNSettings* settings, const char* key, BNBinaryView* view, BNSettingsScope* scope, size_t* inoutSize);
+        BINARYNINJACOREAPI BNArchitecture* BNGetArchitectureForViewType(BNBinaryViewType* type, uint32_t id,
+        BNEndianness endian);  // Deprecated, use BNRecognizePlatformForViewType
 
         """
     res = parse_header(teststr)
-    assert len(res) == 4
+    assert len(res) == 5
     assert res[0] == "BNAddTypeMemberTokens"
     assert res[1] == "AZaz09"
     assert res[2] == "BNWriteDatabaseSnapshotData"
     assert res[3] == "BNSettingsGetStringList"
+    assert res[4] == "BNGetArchitectureForViewType"
 
 
 def generate_def(functions: List[str], dll_name: str) -> str:

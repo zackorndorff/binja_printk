@@ -71,7 +71,7 @@ if(FAKE_BN_CORE)
   add_custom_command(
     OUTPUT ${BN_CORE_NAME}
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/gen_lib.py -i ${BNAPI_DIR}/binaryninjacore.h -o ${CMAKE_CURRENT_BINARY_DIR}/${BN_CORE_NAME} -p ${GEN_PLATFORM}
-    DEPENDS ${BNAPI_DIR}/binaryninjacore.h
+    DEPENDS ${BNAPI_DIR}/binaryninjacore.h ${CMAKE_CURRENT_SOURCE_DIR}/scripts/gen_lib.py
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     VERBATIM)
   add_custom_target(FAKEBNCORE_TARGET DEPENDS ${BN_CORE_NAME})
@@ -83,7 +83,7 @@ if(FAKE_BN_CORE)
 
   # Tell the API repo about it... I thought this had to be a filename but
   # apparently not
-  set(BN_CORE_LIBRARY FAKEBNCORE)
+  set(CORE_LIBRARY FAKEBNCORE)
 endif()
 
 # Here we actually build our plugin
