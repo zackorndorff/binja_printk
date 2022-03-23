@@ -69,6 +69,13 @@ def main():
         hub_args += [args.tag]
         hub(*hub_args)
 
+    # There seems to be a race condition here, so I'm "fixing" it...
+    tries = 0
+    while (tries < 5 and
+            hub("release", "show", args.tag, check=False).returncode != 0):
+        tries += 1
+        time.sleep(1)
+
     # Attach built binaries to the release.
     if args.artifacts:
         for file in os.listdir(args.artifacts):
