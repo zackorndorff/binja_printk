@@ -87,7 +87,7 @@ if(FAKE_BN_CORE)
 
   # The BN devs renamed this variable since the last stable. Above is the new
   # name; keep this variable alive until the next stable
-  set(BN_CORE_LIBRARY CORE_LIBRARY)
+  set(BN_CORE_LIBRARY ${FAKEBNCORE})
 endif()
 
 # Here we actually build our plugin
