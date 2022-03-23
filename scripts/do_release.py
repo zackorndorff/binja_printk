@@ -9,7 +9,10 @@ import subprocess
 
 def hub(*args, check=True):
     args = ["hub"] + list(args)
-    return subprocess.run(args, check=check)
+    print("Running command", args)
+    result = subprocess.run(args, check=check)
+    print("Command returned", result.returncode)
+    return result
 
 
 def git_describe(exclude=""):
