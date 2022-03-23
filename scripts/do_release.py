@@ -5,6 +5,7 @@ Make a GitHub release for the binaries we've built.
 import argparse
 import os
 import subprocess
+import time
 
 
 def hub(*args, check=True):
