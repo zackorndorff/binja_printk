@@ -38,7 +38,7 @@ if(FAKE_BN_CORE)
   # minutes of looking
   if(UNIX)
     if(APPLE)
-      set(BN_CORE_NAME "libbinaryninjacore.dylib")
+      set(BN_CORE_NAME "libbinaryninjacore.1.dylib")
       set(GEN_PLATFORM "macos")
     else()
       # If SONAME changes, this will need a change
