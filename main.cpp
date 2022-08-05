@@ -8,7 +8,7 @@ using namespace BinaryNinja;
 extern "C" {
 BN_DECLARE_CORE_ABI_VERSION;
 
-static Ref<Symbol> sym = nullptr;
+static std::map<size_t, Ref<Symbol>> printkSyms;
 static std::mutex g_initialAnalysisMutex;
 
 // Backwards map the KERN_* log level macros (or at least the second byte of
@@ -50,7 +50,7 @@ void PrintkFixerMLIL(Ref<AnalysisContext> analysisContext) {
   {
     std::scoped_lock<std::mutex> lock(g_initialAnalysisMutex);
     if (!bv->HasInitialAnalysis()) {
-      sym = bv->GetSymbolByRawName("printk");
+      Ref<Symbol> sym = bv->GetSymbolByRawName("printk");
       // Linux kernels after 5.15 use a printk indexing system which changed the
       // exported `printk` symbol into `_printk`.
       if (!sym) sym = bv->GetSymbolByRawName("_printk");
@@ -58,11 +58,15 @@ void PrintkFixerMLIL(Ref<AnalysisContext> analysisContext) {
         LogWarn(
             "Failed to find printk: PrintkFixer won't do anything (is this a "
             "Linux kernel module?)");
+      else
+        printkSyms.emplace(bv->GetFile()->GetSessionId(), sym);
     }
   }
 
   // Early return if the symbol could not be found.
-  if (!sym) return;
+  auto symIter = printkSyms.find(bv->GetFile()->GetSessionId());
+  if (symIter == printkSyms.end()) return;
+  Ref<Symbol> sym = symIter->second;
 
   uint64_t printkAddr = sym->GetAddress();
   // LogDebug("Printk is at %zx", printkAddr);
