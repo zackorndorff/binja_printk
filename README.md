@@ -72,7 +72,8 @@ Note the ugly printk invocation! We can do better!
     * I don't know CMake, so excuse my poorly written build system please.
 * A C++ compiler CMake can find
 * Binary Ninja Commercial (it's required for Workflows at the moment)
-    * Last tested against v3.0.3212-dev
+    * Works on v3.1 stable
+    * Last tested against v3.0.3623-dev
 
 ## Updating the binaryninja-api commits used for automated builds
 
