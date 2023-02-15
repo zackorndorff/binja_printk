@@ -49,18 +49,16 @@ void PrintkFixerMLIL(Ref<AnalysisContext> analysisContext) {
   // thread search for the symbol reference to printk.
   {
     std::scoped_lock<std::mutex> lock(g_initialAnalysisMutex);
-    if (!bv->HasInitialAnalysis()) {
-      Ref<Symbol> sym = bv->GetSymbolByRawName("printk");
-      // Linux kernels after 5.15 use a printk indexing system which changed the
-      // exported `printk` symbol into `_printk`.
-      if (!sym) sym = bv->GetSymbolByRawName("_printk");
-      if (!sym)
-        LogWarn(
-            "Failed to find printk: PrintkFixer won't do anything (is this a "
-            "Linux kernel module?)");
-      else
-        printkSyms.emplace(bv->GetFile()->GetSessionId(), sym);
-    }
+    Ref<Symbol> sym = bv->GetSymbolByRawName("printk");
+    // Linux kernels after 5.15 use a printk indexing system which changed the
+    // exported `printk` symbol into `_printk`.
+    if (!sym) sym = bv->GetSymbolByRawName("_printk");
+    if (!sym)
+      LogWarn(
+          "Failed to find printk: PrintkFixer won't do anything (is this a "
+          "Linux kernel module?)");
+    else
+      printkSyms.emplace(bv->GetFile()->GetSessionId(), sym);
   }
 
   // Early return if the symbol could not be found.
