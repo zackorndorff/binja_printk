@@ -1,4 +1,5 @@
 #include <cinttypes>
+#include <shared_mutex>
 
 #include "binaryninjaapi.h"
 #include "mediumlevelilinstruction.h"
@@ -8,8 +9,8 @@ using namespace BinaryNinja;
 extern "C" {
 BN_DECLARE_CORE_ABI_VERSION;
 
-static std::map<size_t, Ref<Symbol>> printkSyms;
-static std::mutex g_initialAnalysisMutex;
+static std::map<size_t, uint64_t> g_printkSyms;
+static std::shared_mutex g_symsLock;
 
 // Backwards map the KERN_* log level macros (or at least the second byte of
 // them) We expect caller to pass us the byte after the SOH byte. Returns either
@@ -39,37 +40,51 @@ const char* GetLogLevelFromByte(char logLevel) {
   }
 }
 
+uint64_t ResolvePrintkAddressLocked(BinaryView& bv) {
+  Ref<Symbol> sym = bv.GetSymbolByRawName("printk");
+  // Linux kernels after 5.15 use a printk indexing system which changed the
+  // exported `printk` symbol into `_printk`.
+  if (!sym) sym = bv.GetSymbolByRawName("_printk");
+  if (!sym) {
+    LogWarn(
+        "Failed to find printk: PrintkFixer won't do anything (is this a "
+        "Linux kernel module?)");
+    return 0;
+  } else {
+    uint64_t printkAddr = sym->GetAddress();
+    LogInfo("Found printk at 0x%" PRIx64, printkAddr);
+    return printkAddr;
+  }
+}
+
+uint64_t GetPrintkAddress(BinaryView& bv) {
+  // First check if we already found the address
+  {
+    std::shared_lock lock(g_symsLock);
+    auto symIter = g_printkSyms.find(bv.GetFile()->GetSessionId());
+    if (symIter != g_printkSyms.end()) return symIter->second;
+  }
+  // If we didn't find it yet, release the shared lock and acquire the unique
+  // lock. Recheck if we found the symbol; if not, go find it.
+  {
+    std::unique_lock lock(g_symsLock);
+    auto symIter = g_printkSyms.find(bv.GetFile()->GetSessionId());
+    if (symIter != g_printkSyms.end()) return symIter->second;
+    auto addr = ResolvePrintkAddressLocked(bv);
+    g_printkSyms.insert({bv.GetFile()->GetSessionId(), addr});
+    return addr;
+  }
+}
+
 void PrintkFixerMLIL(Ref<AnalysisContext> analysisContext) {
   bool updated = false;
   Ref<MediumLevelILFunction> function =
       analysisContext->GetMediumLevelILFunction();
   Ref<BinaryView> bv = analysisContext->GetFunction()->GetView();
 
-  // The scoped_lock allows us to lock all analysis threads to have only 1
-  // thread search for the symbol reference to printk.
-  {
-    std::scoped_lock<std::mutex> lock(g_initialAnalysisMutex);
-    if (!bv->HasInitialAnalysis()) {
-      Ref<Symbol> sym = bv->GetSymbolByRawName("printk");
-      // Linux kernels after 5.15 use a printk indexing system which changed the
-      // exported `printk` symbol into `_printk`.
-      if (!sym) sym = bv->GetSymbolByRawName("_printk");
-      if (!sym)
-        LogWarn(
-            "Failed to find printk: PrintkFixer won't do anything (is this a "
-            "Linux kernel module?)");
-      else
-        printkSyms.emplace(bv->GetFile()->GetSessionId(), sym);
-    }
-  }
-
+  uint64_t printkAddr = GetPrintkAddress(*bv);
   // Early return if the symbol could not be found.
-  auto symIter = printkSyms.find(bv->GetFile()->GetSessionId());
-  if (symIter == printkSyms.end()) return;
-  Ref<Symbol> sym = symIter->second;
-
-  uint64_t printkAddr = sym->GetAddress();
-  // LogDebug("Printk is at %zx", printkAddr);
+  if (!printkAddr) return;
 
   // Loop over each MLIL instruction in the function
   for (auto& i : function->GetBasicBlocks()) {
