@@ -91,24 +91,34 @@ void PrintkFixerMLIL(Ref<AnalysisContext> analysisContext) {
     for (size_t instrIndex = i->GetStart(); instrIndex < i->GetEnd();
          instrIndex++) {
       MediumLevelILInstruction insn = function->GetInstruction(instrIndex);
-      if (insn.operation != MLIL_CALL) continue;
+      if (insn.operation != MLIL_CALL && insn.operation != MLIL_TAILCALL) continue;
 
       // Get the address being called and see if it's printk
-      auto dest = insn.GetDestExpr<MLIL_CALL>();
-      auto destValue = dest.GetValue();
-      // LogDebug("Checking if value is constant %zu %zu", (size_t)
-      // destValue.value, (size_t) destValue.state);
+      RegisterValue destValue;
+      if (insn.operation == MLIL_CALL) {
+        destValue = insn.GetDestExpr<MLIL_CALL>().GetValue();
+      } else {
+        destValue = insn.GetDestExpr<MLIL_TAILCALL>().GetValue();
+      }
+
       // Why is an ExternalPointerValue not constant?
       if (!(destValue.IsConstant() || destValue.state == ExternalPointerValue))
         continue;
-      // LogDebug("Value was constant");
       if (printkAddr == (uint64_t)destValue.value) {
         // If it was printk let's look for a format string
         // If there are no arguments, bail, and if the format string address
         // isn't constant, bail.
-        auto src = insn.GetParameterExprs<MLIL_CALL>();
-        if (src.size() < 1) continue;
-        auto fmtStr = src[0];
+        MediumLevelILInstruction fmtStr;
+        if (insn.operation == MLIL_CALL) {
+          MediumLevelILInstructionList src = insn.GetParameterExprs<MLIL_CALL>();
+          if (src.size() < 1) continue;
+          fmtStr = src[0];
+        } else {
+          MediumLevelILInstructionList src = insn.GetParameterExprs<MLIL_TAILCALL>();
+          if (src.size() < 1) continue;
+          fmtStr = src[0];
+        }
+
         auto fmtStrValue = fmtStr.GetValue();
         if (!fmtStrValue.IsConstant()) continue;
         auto val = fmtStrValue.value;
